@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>TODOくん</title>
+        <link rel="stylesheet" href="/public/reset.css">
+        <link rel="stylesheet" href="/public/todo.css">
+    </head>
+    <body>
+        <section class="todo">
+            <header>
+                <h1>TODOくん</h1>
+                <form id="form">
+                    <input type="text" class="new" />
+                    <input type="submit" class="new-button" />
+                </form>
+            </header>
+            <section class="todo-list">
+                <ul id="todos">
+                    <li class="todo-listitem">
+                        <div title="todo title">
+                            <input type="checkbox" id="checkbox_1">
+                            <label for="checkbox_1" class="checkbox-label">Write HTML</label>
+                            <input type="button" value="update">
+                            <input type="button" value="delete">
+                        </div>
+                    </li>
+                    <li class="todo-listitem">
+                        <div title="todo title">
+                            <input type="checkbox" id="checkbox_2">
+                            <label for="checkbox_2" class="checkbox-label">Write Test</label>
+                            <input type="button" value="update">
+                            <input type="button" value="delete">
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </section>
+    </body>
+</html>
