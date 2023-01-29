@@ -2,17 +2,17 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>TODOくん (ログイン)</title>
+        <title>TODOくん (登録)</title>
         <link rel="stylesheet" href="/public/reset.css">
         <link rel="stylesheet" href="/public/todo.css">
     </head>
     <body>
         <section class="todo">
             <header>
-                <h1>TODOくん (ログイン)</h1>
+                <h1>TODOくん (登録)</h1>
             </header>
             <section class="todo-list">
-                <form method="POST" action="/login">
+                <form method="POST" action="/register">
                     <section>
                         <label for="username">UserName</label>
                         <input type="text" name="username" id="username" />                            
@@ -20,6 +20,10 @@
                     <section>
                         <label for="password">Password</label>
                         <input type="password" name="password" id="password" />    
+                    </section>
+                    <section>
+                        <label for="password-confirm">Password(確認用)</label>
+                        <input type="password" name="password-confirm" id="password-confirm" />    
                     </section>
                     <input type="submit" />
                 </form>
