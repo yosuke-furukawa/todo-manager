@@ -38,3 +38,17 @@ export async function listTodos(username: string): Promise<Array<Todo>> {
     }
     return data;
 }
+
+export async function updateTodo(todo: Todo) {
+    const { error } = await supabase.from("todos").update(todo).eq("id", todo.id);
+    if (error) {
+        throw error;
+    }
+}
+
+export async function removeTodo(id: string) {
+    const { error } = await supabase.from("todos").delete().eq("id", id);
+    if (error) {
+        throw error;
+    }
+}

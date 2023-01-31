@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createUser, existUser } from "./lib/users.mjs";
 import { createSession, getSession, deleteSession } from "./lib/sessions.mjs";
-import { createTodo, listTodos } from "./lib/todos.mjs";
+import { createTodo, listTodos, removeTodo, updateTodo } from "./lib/todos.mjs";
 const server = createServer();
 const PORT = process.env.PORT ?? 3000;
 const extensions = {
@@ -120,9 +120,38 @@ async function postTodo(req, res, session) {
     req.on("end", async () => {
         const todo = JSON.parse(data);
         console.log(todo);
-        await createTodo(todo.title, session.username);
-        res.end("Created!");
+        const result = await createTodo(todo.title, session.username);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(result));
     });
+}
+async function putTodo(req, res, session) {
+    const id = req.url?.substring("/todos/".length);
+    console.log(id);
+    let data = "";
+    req.on("data", (chunk) => {
+        data += chunk;
+    });
+    req.on("end", async () => {
+        const todo = JSON.parse(data);
+        todo.id = id;
+        console.log(todo);
+        await updateTodo(todo);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(todo));
+    });
+}
+async function deleteTodo(req, res, session) {
+    const id = req.url?.substring("/todos/".length);
+    console.log(id);
+    if (!id) {
+        res.statusCode = 400;
+        res.end("Bad Request");
+        return;
+    }
+    await removeTodo(id);
+    res.statusCode = 204;
+    res.end();
 }
 async function getTodos(req, res, session) {
     const todos = await listTodos(session.username);
@@ -176,6 +205,14 @@ server.on("request", async (req, res) => {
         }
         if (req.url === "/todos" && req.method === "GET") {
             await getTodos(req, res, session);
+            return;
+        }
+        if (req.url?.startsWith("/todos") && req.method === "PUT") {
+            await putTodo(req, res, session);
+            return;
+        }
+        if (req.url?.startsWith("/todos") && req.method === "DELETE") {
+            await deleteTodo(req, res, session);
             return;
         }
         if (req.url === "/" && req.method === "GET") {
