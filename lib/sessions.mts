@@ -33,6 +33,17 @@ export async function existSession(id: string): Promise<boolean> {
     return true;
 }
 
+export async function getSession(id: string): Promise<{username: string, id: string } | null> {
+    const { data, error } = await supabase.from("sessions").select().eq("id", id);
+    if (error) {
+        throw error;
+    }
+    if (!data || data.length === 0) {
+        return null;
+    }
+    return data[0];
+}
+
 export async function deleteSession(id: string) {
     const { error } = await supabase.from("sessions").delete().eq("id", id);
     if (error) {

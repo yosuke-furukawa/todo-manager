@@ -2,7 +2,8 @@ import { IncomingMessage, ServerResponse, createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createUser, existUser } from "./lib/users.mjs";
-import { createSession, existSession, deleteSession } from "./lib/sessions.mjs";
+import { createSession, getSession, deleteSession } from "./lib/sessions.mjs";
+import { createTodo, listTodos } from "./lib/todos.mjs";
 
 const server = createServer();
 const PORT = process.env.PORT ?? 3000;
@@ -103,7 +104,7 @@ async function getStaticFiles(req: IncomingMessage, res: ServerResponse, url: st
     res.end(file);
 }
 
-async function checkUser(req: IncomingMessage): Promise<string | null> {
+async function checkUser(req: IncomingMessage): Promise<{username: string, id: string } | null> {
     const rawCookie = req.headers.cookie;
     const cookies = rawCookie?.split("; ");
     if (!cookies || cookies.length === 0) {
@@ -112,14 +113,35 @@ async function checkUser(req: IncomingMessage): Promise<string | null> {
     for (const cookie of cookies) {
         const [key, value] = cookie.split("=");
         if (key === "session") {
-            const isExist = await existSession(value);
-            if (isExist) {
-                return value;
+            const session = await getSession(value);
+            if (session) {
+                return session;
             }
             return null;
         }
     }
     return null;
+}
+
+async function postTodo(req: IncomingMessage, res: ServerResponse, session: { username: string, id: string }) {
+    let data = "";
+    req.on("data", (chunk) => {
+        data += chunk;
+    });
+    req.on("end", async () => {
+        const todo = JSON.parse(data);
+        console.log(todo);
+        await createTodo(todo.title, session.username);
+        res.end("Created!");
+    });
+}
+
+async function getTodos(req: IncomingMessage, res: ServerResponse, session: { username: string, id: string }) {
+    const todos = await listTodos(session.username);
+    res.writeHead(200, {
+        "Content-Type": "application/json"
+    });
+    res.end(JSON.stringify(todos));
 }
 
 server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
@@ -147,8 +169,8 @@ server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
         }
 
         // 認可の処理
-        const id = await checkUser(req);
-        if (!id) {
+        const session = await checkUser(req);
+        if (!session) {
             res.writeHead(302, {
                 "Location": "/login"
             });
@@ -156,11 +178,20 @@ server.on("request", async (req: IncomingMessage, res: ServerResponse) => {
             return;
         }
         if (req.url === "/logout") {
-            await deleteSession(id);
+            await deleteSession(session.id);
             res.writeHead(302, {
                 "Location": "/login"
             });
             res.end();
+            return;
+        }
+
+        if (req.url === "/todos" && req.method === "POST") {
+            await postTodo(req, res, session);
+            return;
+        }
+        if (req.url === "/todos" && req.method === "GET") {
+            await getTodos(req, res, session);
             return;
         }
 
