@@ -4,12 +4,14 @@ import path from "node:path";
 import { createUser, existUser } from "./lib/users.mjs";
 import { createSession, getSession, deleteSession } from "./lib/sessions.mjs";
 import { createTodo, listTodos, removeTodo, updateTodo } from "./lib/todos.mjs";
+import { createSupabaseClient } from "./lib/client.mjs";
 const server = createServer();
 const PORT = process.env.PORT ?? 3000;
 const extensions = {
     ".js": "text/javascript",
     ".css": "text/css"
 };
+const supabase = createSupabaseClient(null);
 server.listen(PORT, () => {
     console.log(`Listen on ${PORT}`);
 });
@@ -33,7 +35,7 @@ async function postLogin(req, res) {
                 res.end("Unauthorized, login failed.");
                 return;
             }
-            const { id } = await createSession(username);
+            const { id } = await createSession(supabase, username);
             res.writeHead(302, {
                 "Location": "/",
                 "Set-Cookie": `session=${id}`
@@ -103,7 +105,7 @@ async function checkUser(req) {
     for (const cookie of cookies) {
         const [key, value] = cookie.split("=");
         if (key === "session") {
-            const session = await getSession(value);
+            const session = await getSession(supabase, value);
             if (session) {
                 return session;
             }
@@ -192,7 +194,7 @@ server.on("request", async (req, res) => {
             return;
         }
         if (req.url === "/logout") {
-            await deleteSession(session.id);
+            await deleteSession(supabase, session.id);
             res.writeHead(302, {
                 "Location": "/login"
             });
